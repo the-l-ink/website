@@ -6,7 +6,6 @@ const root = fileURLToPath(new URL('.', import.meta.url));
 
 /** @type {import('next').NextConfig} */
 const config = {
-  reactStrictMode: true,
   turbopack: {
     root,
   },

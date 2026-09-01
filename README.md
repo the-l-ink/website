@@ -22,3 +22,19 @@ bun run build
 
 Documentation lives in `content/docs`. Fumadocs generates navigation, search,
 Markdown endpoints, and page metadata from that source.
+
+## Cloudflare Workers
+
+Build and test the Worker locally:
+
+```sh
+bun run build:vinext
+bun run start:vinext
+```
+
+For Cloudflare Workers Builds, use:
+
+```txt
+Build command:  bun run build:vinext
+Deploy command: bun run deploy:vinext
+```

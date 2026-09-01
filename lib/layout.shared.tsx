@@ -1,18 +1,10 @@
 import type { BaseLayoutProps } from 'fumadocs-ui/layouts/shared';
 import { appName, githubUrl } from './shared';
-import { Braces } from 'lucide-react';
 
 export function baseOptions(): BaseLayoutProps {
   return {
     nav: {
-      title: (
-        <span className="link-brand">
-          <span className="link-brand-mark" aria-hidden="true">
-            <Braces />
-          </span>
-          {appName}
-        </span>
-      ),
+      title: appName,
       transparentMode: 'top',
     },
     links: [
