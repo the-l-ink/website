@@ -1,0 +1,9 @@
+{
+  "title": "Concepts",
+  "description": "The contracts shared by every adapter.",
+  "pages": [
+    "routing",
+    "properties",
+    "decorators"
+  ]
+}

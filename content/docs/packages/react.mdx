@@ -1,0 +1,68 @@
+---
+title: React
+description: Lifecycle-safe subscriptions to Core tunnels and properties.
+---
+
+`@the-link/react` renders the state of existing Core objects. It does not create
+another source of truth: the `Tunnel` or `Property` instance remains
+authoritative.
+
+## Install
+
+```sh
+npm install @the-link/react @the-link/core react
+```
+
+React and Core are peer dependencies so the application owns their instances.
+
+## Render tunnel events
+
+`ReactTunnel.useFactory()` returns a stable wrapper while the Tunnel reference
+is unchanged.
+
+```tsx
+import { ReactTunnel } from "@the-link/react"
+import type { Tunnel } from "@the-link/core"
+
+export function Status({ tunnel }: { tunnel: Tunnel }) {
+  const events = ReactTunnel.useFactory(tunnel)
+  const status = events.useFirstState("status:changed", "idle")
+
+  return <span>{status}</span>
+}
+```
+
+The wrapper exposes three hooks:
+
+| Hook | Result |
+| --- | --- |
+| `useSubscribe(event, handler)` | Effect-style subscription with cleanup |
+| `useState(event, initialTuple)` | Latest complete event payload tuple |
+| `useFirstState(event, initial)` | Latest first payload value |
+
+Call them unconditionally during render like any React hook.
+
+## Render a Property
+
+`useProperty()` reads the current value and subscribes to local `change` events
+with `useSyncExternalStore`.
+
+```tsx
+import { useProperty } from "@the-link/react"
+import type { Property } from "@the-link/core"
+
+export function Theme({ property }: { property: Property<string> }) {
+  const theme = useProperty(property)
+
+  return <span>{theme}</span>
+}
+```
+
+Updates still happen through `property.update()`. The hook only projects the
+current authoritative value into rendering.
+
+## Exports
+
+```ts
+import { ReactTunnel, useProperty } from "@the-link/react"
+```

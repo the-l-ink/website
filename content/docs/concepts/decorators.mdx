@@ -1,0 +1,64 @@
+---
+title: Decorators
+description: Bind class methods to Link routing during instance construction.
+---
+
+Core decorators register class methods against a Link without changing the
+underlying routing contract. The ECMAScript implementation is the primary entry
+point.
+
+```ts
+import { TheLink } from "@the-link/core"
+import { Subscribe } from "@the-link/core/decorators"
+
+class ApplicationLink extends TheLink {
+  @Subscribe("greet")
+  greet(name: string) {
+    return `Hello ${name}`
+  }
+}
+```
+
+## Install and import
+
+Decorators ship with Core and do not require another package.
+
+```ts
+import {
+  Connect,
+  Finalize,
+  Forward,
+  Intercept,
+  Publish,
+  Subscribe,
+} from "@the-link/core/decorators"
+```
+
+Only decorators use a subpath. Links, tunnels, properties, codecs, and their
+types are imported from `@the-link/core`.
+
+## Available decorators
+
+| Decorator | Routing operation |
+| --- | --- |
+| `@Intercept(prefix)` | Add a prefix-matched interceptor |
+| `@Subscribe(event)` | Subscribe a method to an exact event |
+| `@Forward(fromPrefix, toPrefix)` | Forward matching events |
+| `@Finalize(prefix)` | Add a prefix-matched result finalizer |
+| `@Publish(event)` | Replace a method with an event publisher |
+| `@Connect(...)` | Connect a returned or assigned Link relationship |
+
+Decorators register constructor-time initializers on the class prototype. Each
+instance receives its own registrations when `TheLink` runs those initializers.
+
+## Legacy TypeScript decorators
+
+Projects that still compile TypeScript's legacy decorator form may import the
+compatible implementation from a separate entry point:
+
+```ts
+import { Subscribe } from "@the-link/core/decorators/legacy"
+```
+
+Do not mix the ECMAScript and legacy implementations in one decorator pipeline.
+Choose the entry point that matches the project's compiler mode.

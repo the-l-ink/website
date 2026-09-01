@@ -1,0 +1,39 @@
+---
+title: Packages
+description: Choose Core primitives and adapters by the boundary you need to cross.
+---
+
+Every package has one responsibility. Core defines the contract; adapters carry
+that same contract into a particular runtime or transport.
+
+<Cards>
+  <Card title="Core" description="Links, tunnels, properties, codecs, and decorators." href="/docs/packages/core" />
+  <Card title="Client" description="Browser HTTP publishing and WebSocket subscriptions." href="/docs/packages/client" />
+  <Card title="Server" description="Hono routes and one SocketLink per client." href="/docs/packages/server" />
+  <Card title="React" description="Lifecycle-safe tunnel and property hooks." href="/docs/packages/react" />
+  <Card title="Process" description="Node.js parent-child communication over IPC." href="/docs/packages/process" />
+  <Card title="Tab" description="Same-origin communication through BroadcastChannel." href="/docs/packages/tab" />
+</Cards>
+
+## Selection guide
+
+| Need | Package |
+| --- | --- |
+| In-memory event routing | `@the-link/core` |
+| Browser request-response to a server | `@the-link/client` + `@the-link/server` |
+| Long-lived browser/server traffic | `@the-link/client` + `@the-link/server` |
+| Render Tunnel or Property state | `@the-link/react` |
+| Parent/child Node.js messaging | `@the-link/process` |
+| Same-origin tab or window messaging | `@the-link/tab` |
+
+All packages use named root exports. Only Core decorators are intentionally
+isolated behind subpath exports.
+
+```ts
+import { TheLink, Tunnel, Property } from "@the-link/core"
+import { ClientLink } from "@the-link/client"
+import { ServerLink } from "@the-link/server"
+import { ReactTunnel, useProperty } from "@the-link/react"
+import { ProcessLink } from "@the-link/process"
+import { TabLink } from "@the-link/tab"
+```

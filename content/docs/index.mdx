@@ -1,0 +1,82 @@
+---
+title: The Link
+description: Composable bidirectional event routing across application boundaries.
+---
+
+The Link gives browser, server, process, React, and tab environments one small
+communication model. Application code publishes named events through an outbound
+tunnel and handles received events through an inbound tunnel. Adapters carry
+that contract across the boundary without redefining it.
+
+```ts
+import { Tunnel } from "@the-link/core"
+
+const tunnel = new Tunnel()
+
+tunnel.subscribe("sum", (left: number, right: number) => left + right)
+
+const total = await tunnel.publishFirst<number>("sum", 20, 22)
+
+console.log(total) // 42
+```
+
+## Start here
+
+<Cards>
+  <Card title="Getting started" description="Install Core and route your first event." href="/docs/getting-started" />
+  <Card title="Routing model" description="Understand tunnels, phases, prefixes, and links." href="/docs/concepts/routing" />
+  <Card title="Synchronized properties" description="Move provider-owned state through a link." href="/docs/concepts/properties" />
+  <Card title="Package reference" description="Choose the adapter for each runtime boundary." href="/docs/packages" />
+</Cards>
+
+## One model, specialized adapters
+
+`@the-link/core` owns the routing primitives. The remaining packages adapt those
+primitives to concrete environments:
+
+| Package | Boundary |
+| --- | --- |
+| `@the-link/client` | Browser to server over HTTP and WebSocket |
+| `@the-link/server` | Hono server routes and per-client sockets |
+| `@the-link/react` | Core tunnel and property state inside React |
+| `@the-link/process` | Parent and child Node.js processes over IPC |
+| `@the-link/tab` | Same-origin browser tabs through `BroadcastChannel` |
+
+The adapters do not introduce another event vocabulary. A Link remains a Link,
+and every routing relationship can be removed through the cleanup function
+returned when it is created.
+
+<Callout title="Transport-neutral by design">
+  Core does not know whether an event crosses HTTP, a WebSocket, process IPC, a
+  browser channel, or no transport at all.
+</Callout>
+
+## The routing lifecycle
+
+Every `Tunnel.publish()` follows the same ordered lifecycle:
+
+<Steps>
+  <Step>
+    ### Intercept
+
+    Prefix-matched interceptors transform or reject the published values.
+  </Step>
+  <Step>
+    ### Subscribe
+
+    Handlers registered for the exact event run and contribute results.
+  </Step>
+  <Step>
+    ### Forward
+
+    Prefix-matched forwarding rules route the event into other tunnels.
+  </Step>
+  <Step>
+    ### Finalize
+
+    Prefix-matched finalizers transform the aggregated results.
+  </Step>
+</Steps>
+
+Continue with [Getting started](./getting-started.mdx) or open the
+[Core reference](./packages/core.mdx) for the complete primitive API.

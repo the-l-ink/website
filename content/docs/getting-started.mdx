@@ -1,0 +1,126 @@
+---
+title: Getting started
+description: Install The Link and route your first event.
+---
+
+The smallest useful setup needs only `@the-link/core`. Add an adapter when the
+route must cross a browser, server, process, React, or tab boundary.
+
+## Requirements
+
+- A modern JavaScript runtime with ECMAScript modules
+- TypeScript when you want the published declarations and decorator metadata
+- React 19.2 or later only when using `@the-link/react`
+- A browser with `fetch`, `WebSocket`, `Blob`, and URL APIs for `@the-link/client`
+- Node.js process IPC for `@the-link/process`
+
+## Install Core
+
+<Tabs items={["npm", "pnpm", "Yarn", "Bun"]}>
+  <Tab>
+    ```sh
+    npm install @the-link/core
+    ```
+  </Tab>
+  <Tab>
+    ```sh
+    pnpm add @the-link/core
+    ```
+  </Tab>
+  <Tab>
+    ```sh
+    yarn add @the-link/core
+    ```
+  </Tab>
+  <Tab>
+    ```sh
+    bun add @the-link/core
+    ```
+  </Tab>
+</Tabs>
+
+## Route an event
+
+Create a tunnel, register an exact-event handler, then publish through it.
+
+```ts
+import { Tunnel } from "@the-link/core"
+
+const commands = new Tunnel()
+
+const unsubscribe = commands.subscribe("greet", (name: string) => {
+  return `Hello ${name}`
+})
+
+const greeting = await commands.publishFirst<string>("greet", "Zouhir")
+
+console.log(greeting) // Hello Zouhir
+
+unsubscribe()
+```
+
+`subscribe()` returns its cleanup function. Cleanup belongs beside the code that
+created the relationship; no separate listener registry is required.
+
+## Connect two links
+
+A `TheLink` owns two tunnels:
+
+- `$outbound` carries events toward an adapter or another routing layer.
+- `$inbound` carries events received from an adapter or another routing layer.
+
+```ts
+import { TheLink } from "@the-link/core"
+
+const application = new TheLink()
+const account = new TheLink()
+
+account.$inbound.subscribe("profile", () => ({ name: "Zouhir" }))
+
+const disconnect = application.connectTo(account)
+const profile = await application.$outbound.publishFirst<{ name: string }>("profile")
+
+disconnect()
+```
+
+Use prefixes to mount a link beneath a namespace:
+
+```ts
+const disconnect = application.connectTo(account, "", "account:")
+
+await application.$outbound.publish("account:profile")
+```
+
+## Cross a boundary
+
+Install the adapter that owns the transport. For example, a browser publishes to
+a Hono server with the Client and Server packages:
+
+```sh
+npm install @the-link/client @the-link/server
+```
+
+The server exposes the route:
+
+```ts
+import { ServerLink } from "@the-link/server"
+
+const server = new ServerLink()
+
+server.$inbound.subscribe("sum", (left: number, right: number) => left + right)
+server.prepareConnection()
+
+export default server.app
+```
+
+The browser addresses the same route:
+
+```ts
+import { ClientLink } from "@the-link/client"
+
+const client = new ClientLink("https://api.example.com/events")
+const [total] = await client.$outbound.publish<[number]>("sum", 20, 22)
+```
+
+Read [Client and Server](./packages/client.mdx) for WebSocket subscriptions and
+runtime integration details.

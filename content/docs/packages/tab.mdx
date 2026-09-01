@@ -1,0 +1,45 @@
+---
+title: Tab
+description: Communicate between same-origin browser contexts through BroadcastChannel.
+---
+
+`@the-link/tab` maps outbound events to a `BroadcastChannel` and publishes
+messages from other channel members through its inbound tunnel.
+
+## Install
+
+```sh
+npm install @the-link/tab
+```
+
+## Usage
+
+Create the same namespace in every tab or window that should communicate:
+
+```ts
+import { TabLink } from "@the-link/tab"
+
+const tabs = new TabLink("workspace")
+
+tabs.$inbound.subscribe("document:changed", document => {
+  console.log("Changed in another tab", document)
+})
+
+await tabs.$outbound.publish("document:changed", {
+  id: "document-42",
+  title: "The Link",
+})
+```
+
+The browser delivers broadcasts to other `BroadcastChannel` instances with the
+same namespace and origin. The sender's own channel instance does not receive
+its broadcast.
+
+Payloads use the platform's structured-clone algorithm. This adapter does not
+apply the Core byte codec and requires no server.
+
+## Export
+
+```ts
+import { TabLink } from "@the-link/tab"
+```

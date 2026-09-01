@@ -1,0 +1,13 @@
+{
+  "title": "Packages",
+  "description": "Core primitives and runtime adapters.",
+  "pages": [
+    "index",
+    "core",
+    "client",
+    "server",
+    "react",
+    "process",
+    "tab"
+  ]
+}

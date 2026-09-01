@@ -1,0 +1,118 @@
+---
+title: Routing
+description: Tunnels, links, prefixes, and the ordered publication lifecycle.
+---
+
+Routing in The Link is built from one primitive: the `Tunnel`. A `TheLink`
+combines two tunnels so the direction of communication stays explicit.
+
+## Tunnel
+
+A tunnel publishes string event names with zero or more values. Multiple exact
+subscribers may handle the event; their results are collected in registration
+order.
+
+```ts
+import { Tunnel } from "@the-link/core"
+
+const tunnel = new Tunnel()
+
+tunnel.subscribe("price", () => 19)
+tunnel.subscribe("price", () => 23)
+
+const prices = await tunnel.publish<number[]>("price")
+// [19, 23]
+```
+
+Use `publishFirst<Result>()` when only the first result is meaningful.
+
+## Ordered phases
+
+`publish()` always moves through four phases:
+
+| Phase | Match | Input | Contribution |
+| --- | --- | --- | --- |
+| Interceptors | Event prefix | Published values | Transformed values |
+| Subscribers | Exact event | Current values | Handler results |
+| Forwarders | Event prefix | Event and current values | Forwarded results |
+| Finalizers | Event prefix | Aggregated results | Final results |
+
+```ts
+const tunnel = new Tunnel()
+
+tunnel.addInterceptor((value: number) => [Math.max(0, value)], "score:")
+tunnel.subscribe("score:changed", (value: number) => value * 2)
+tunnel.addFinalizer((result: number) => [result + 1], "score:")
+
+const [score] = await tunnel.publish<[number]>("score:changed", -5)
+```
+
+An interceptor or finalizer returns the values passed into the next stage. It
+may also throw to stop the publication.
+
+## Exact events and prefixes
+
+Subscribers use exact event names. Interceptors, forwarders, and finalizers use
+prefix matching. An empty prefix matches every event.
+
+Forwarding removes the source prefix and adds the destination prefix:
+
+```ts
+const publicEvents = new Tunnel()
+const accountEvents = new Tunnel()
+
+const stop = publicEvents.forwardTo(accountEvents, "account:", "user:")
+
+await publicEvents.publish("account:updated", profile)
+// accountEvents receives "user:updated"
+
+stop()
+```
+
+The destination may be another `Tunnel` or a function with the shape
+`(event, ...values) => result`.
+
+## Await one publication
+
+Use `subscribeOnce()` for callback code and `waitFor()` for sequential code.
+
+```ts
+const values = await tunnel.waitFor<[string]>("ready", 5_000)
+const value = await tunnel.waitFirst<string>("ready", 5_000)
+```
+
+The timeout is optional. When supplied, expiration rejects the promise.
+
+## TheLink
+
+`TheLink` gives routing a direction:
+
+```txt
+local code -> $outbound -> adapter / link
+local code <- $inbound  <- adapter / link
+```
+
+The three composition methods are:
+
+| Method | Relationship |
+| --- | --- |
+| `subscribeTo(link)` | Forward another link's inbound events into this inbound tunnel |
+| `publishTo(link)` | Forward this outbound tunnel into another link's outbound tunnel |
+| `connectTo(link)` | Create both relationships together |
+
+Every method accepts `fromPrefix` and `toPrefix`, and every creation method
+returns a cleanup function. Explicit counterparts—`unsubscribeFrom()`,
+`stopPublishingTo()`, and `disconnectFrom()`—remove the same relationship when
+its original arguments are available.
+
+## Transport adapters
+
+Adapters subclass `TheLink` and attach transport behavior to its tunnels. The
+application still handles `$inbound` and publishes through `$outbound`; only the
+path between them changes.
+
+<Cards>
+  <Card title="Client and Server" description="HTTP request-response and WebSocket subscriptions." href="/docs/packages/client" />
+  <Card title="Process" description="The event envelope over Node.js IPC." href="/docs/packages/process" />
+  <Card title="Tab" description="The event envelope over BroadcastChannel." href="/docs/packages/tab" />
+</Cards>

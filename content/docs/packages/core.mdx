@@ -1,0 +1,107 @@
+---
+title: Core
+description: Links, tunnels, properties, codecs, and decorator entry points.
+---
+
+`@the-link/core` contains the transport-neutral contracts shared by every
+adapter. It has no browser, server framework, React, or process dependency.
+
+## Install
+
+```sh
+npm install @the-link/core
+```
+
+## Root exports
+
+```ts
+import {
+  TheLink,
+  Tunnel,
+  Property,
+  defaultSerialize,
+  defaultDeserialize,
+} from "@the-link/core"
+```
+
+The root also exports the public types `Initializer`, `Publisher`, `TunnelName`,
+`Interceptor`, `Subscriber`, `Forwarder`, `Finalizer`, `PropertyInterceptor`,
+`PropertyType`, `Bytes`, `Serialize`, and `Deserialize`.
+
+## Tunnel API
+
+| Method | Purpose | Returns |
+| --- | --- | --- |
+| `addInterceptor(handler, prefix?)` | Transform values before handling | Cleanup function |
+| `subscribe(event, handler)` | Handle an exact event | Cleanup function |
+| `subscribeOnce(event, handler)` | Handle the next exact event | Cleanup function |
+| `waitFor(event, timeout?)` | Await the next payload tuple | Promise of values |
+| `waitFirst(event, timeout?)` | Await the first payload value | Promise of one value |
+| `forwardTo(target, from?, to?)` | Route matching event prefixes | Cleanup function |
+| `addFinalizer(handler, prefix?)` | Transform aggregated results | Cleanup function |
+| `publish(event, ...values)` | Run the complete routing lifecycle | Promise of results |
+| `publishFirst(event, ...values)` | Return the first result | Promise of one result |
+
+Every registration also has an explicit removal method: `removeInterceptor()`,
+`unsubscribe()`, `stopForwardingTo()`, and `removeFinalizer()`.
+
+Read [Routing](../concepts/routing.mdx) for the phase and prefix semantics.
+
+## TheLink API
+
+Every link exposes readonly `$inbound` and `$outbound` tunnels.
+
+```ts
+const link = new TheLink()
+
+link.$inbound.subscribe("received", console.log)
+await link.$outbound.publish("send", payload)
+```
+
+Links compose through `subscribeTo()`, `publishTo()`, and `connectTo()`. Each
+method accepts optional source and destination prefixes and returns cleanup.
+Their explicit removal counterparts are `unsubscribeFrom()`,
+`stopPublishingTo()`, and `disconnectFrom()`.
+
+## Property API
+
+Create one of three roles:
+
+```ts
+const editable = Property.public(link, initialValue, interceptor)
+const readonly = Property.private(link, initialValue)
+const remote = Property.consumer(link, key, initialValue, interceptor)
+```
+
+Each property exposes:
+
+- `value` — current local value
+- `key` — synchronization namespace
+- `tunnel` — local `change` notifications
+- `update(value)` — publish an update
+- `setInterceptor(handler | null)` — replace inbound validation or mapping
+- `toJSON()` — serialize `{ key, value }`
+
+Read [Properties](../concepts/properties.mdx) for the provider/consumer lifecycle.
+
+## Codecs
+
+The default codec serializes JSON as UTF-8 bytes:
+
+```ts
+type Serialize = (value: unknown) => Uint8Array<ArrayBuffer>
+type Deserialize = (bytes: Uint8Array<ArrayBuffer>) => unknown
+```
+
+Client and Server allow both functions to be replaced. Paired transports must
+use compatible serializers and deserializers.
+
+## Decorator entry points
+
+```ts
+import { Subscribe } from "@the-link/core/decorators"
+import { Subscribe as LegacySubscribe } from "@the-link/core/decorators/legacy"
+```
+
+See [Decorators](../concepts/decorators.mdx) for the supported operations and
+compiler distinction.

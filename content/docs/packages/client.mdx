@@ -1,0 +1,98 @@
+---
+title: Client
+description: Browser HTTP publishing and long-lived WebSocket subscriptions.
+---
+
+`@the-link/client` adapts the Core Link contract to browser networking.
+`ClientLink` publishes request-response events over HTTP and creates one
+`SocketLink` for each WebSocket subscription.
+
+## Install
+
+```sh
+npm install @the-link/client
+```
+
+Core is installed as a package dependency. The runtime must provide browser
+`fetch`, `WebSocket`, `Blob`, and URL APIs.
+
+## HTTP publication
+
+Point the client at the base route prepared by a `ServerLink`:
+
+```ts
+import { ClientLink } from "@the-link/client"
+
+const client = new ClientLink("https://api.example.com/events")
+
+const [total] = await client.$outbound.publish<[number]>("sum", 20, 22)
+
+console.log(total) // 42
+```
+
+The adapter sends a binary `POST` to `<url>/publish`. Returned values are the
+aggregated server handler results; they are not inbound notifications.
+
+## WebSocket subscription
+
+Use `subscribeAsync()` when code should wait until the server accepts the
+connection:
+
+```ts
+const socket = await client.subscribeAsync<{ userId: string }>({
+  token: "session-token",
+})
+
+console.log(socket.payload.userId)
+
+socket.$inbound.subscribe("notification", notification => {
+  console.log(notification)
+})
+
+await socket.$outbound.publish("presence:update", "online")
+```
+
+The argument is the connection payload read by the Server Socket Link. The
+generic describes the response returned by the server's subscription handler.
+
+## Connection lifecycle
+
+`subscribe(payload?)` starts without awaiting and returns the connection UUID.
+`onSubscribe(handler)` observes every accepted `SocketLink`. Active sockets are
+available in `client.sockets` by UUID.
+
+```ts
+const stopObserving = client.onSubscribe(socket => {
+  console.log("Connected", socket.payload)
+})
+
+const uuid = client.subscribe({ token })
+```
+
+Call `socket.unsubscribe(code?, reason?)` to close deliberately. Recoverable
+WebSocket closures reconnect after one second using the original connection
+payload.
+
+## Join another Link
+
+`socket.autoJoin(link, fromPrefix?, toPrefix?)` connects a Link for the lifetime
+of the socket. It also returns cleanup for earlier manual disconnection.
+
+```ts
+const leave = socket.autoJoin(application, "public:", "")
+```
+
+## Custom codecs
+
+```ts
+client.setSerialize(serialize)
+client.setDeserialize(deserialize)
+```
+
+Configure compatible functions on the paired Server Link.
+
+## Exports
+
+```ts
+import { ClientLink, SocketLink } from "@the-link/client"
+```

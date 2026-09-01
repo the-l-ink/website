@@ -1,0 +1,97 @@
+---
+title: Properties
+description: Synchronize provider-owned values through an existing Link topology.
+---
+
+`Property<Value>` adds synchronized state to a Link. One provider owns the key
+and authoritative value. Consumers bind to that key and receive updates through
+the link topology that already exists.
+
+## Provider and consumer
+
+```ts
+import { Property, TheLink } from "@the-link/core"
+
+const providerLink = new TheLink()
+const consumerLink = new TheLink()
+
+providerLink.$outbound.forwardTo(consumerLink.$inbound)
+consumerLink.$outbound.forwardTo(providerLink.$inbound)
+
+const theme = Property.public(providerLink, "light")
+const snapshot = theme.toJSON()
+
+const remoteTheme = Property.consumer(
+  consumerLink,
+  snapshot.key,
+  snapshot.value,
+)
+
+remoteTheme.tunnel.subscribe("change", value => console.log(value))
+
+await theme.update("dark")
+```
+
+The serialized provider shape contains only the public binding information:
+
+```ts
+{
+  key: string
+  value: Value
+}
+```
+
+Send that snapshot through your application protocol, then create the consumer
+with the same key and initial value.
+
+## Public and private providers
+
+`Property.public()` accepts update requests from consumers. The provider applies
+its optional interceptor, stores the accepted value, and relays it so every
+consumer converges.
+
+```ts
+const count = Property.public(link, 0, incoming => {
+  if (!Number.isInteger(incoming)) throw new Error("Count must be an integer")
+  return Math.max(0, incoming)
+})
+```
+
+`Property.private()` rejects consumer update requests. The provider may still
+call `update()` and publish its own values.
+
+```ts
+const status = Property.private(link, "starting")
+
+await status.update("ready")
+```
+
+## Read and observe
+
+Read the current snapshot through `.value`. Observe local changes through the
+property's local tunnel:
+
+```ts
+console.log(theme.value)
+
+const unsubscribe = theme.tunnel.subscribe("change", value => {
+  console.log(value)
+})
+```
+
+Inside React, use [`useProperty()`](../packages/react.mdx) so rendering follows
+the same authoritative instance through `useSyncExternalStore`.
+
+## Interceptors
+
+Providers and consumers may transform or validate inbound values. Supply the
+interceptor at construction or replace it later:
+
+```ts
+remoteTheme.setInterceptor(value => value === "dark" ? "dark" : "light")
+remoteTheme.setInterceptor(null)
+```
+
+The Link does not provide persistence or conflict resolution. A Property moves
+one owner-defined value through your routing topology; the application decides
+how that value is stored and what updates are valid.
