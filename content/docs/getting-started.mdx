@@ -52,9 +52,9 @@ const unsubscribe = commands.subscribe("greet", (name: string) => {
   return `Hello ${name}`
 })
 
-const greeting = await commands.publishFirst<string>("greet", "Zouhir")
+const greeting = await commands.publishFirst<string>("greet", "World")
 
-console.log(greeting) // Hello Zouhir
+console.log(greeting) // Hello World
 
 unsubscribe()
 ```
@@ -75,7 +75,7 @@ import { TheLink } from "@the-link/core"
 const application = new TheLink()
 const account = new TheLink()
 
-account.$inbound.subscribe("profile", () => ({ name: "Zouhir" }))
+account.$inbound.subscribe("profile", () => ({ name: "Example" }))
 
 const disconnect = application.connectTo(account)
 const profile = await application.$outbound.publishFirst<{ name: string }>("profile")
