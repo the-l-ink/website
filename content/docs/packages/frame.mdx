@@ -1,0 +1,49 @@
+---
+title: Frame
+description: Bind Window messaging to a specific source and origin.
+---
+
+`@the-link/frame` carries Link events between the current browser Window and
+one specific remote Window.
+
+## Install
+
+```sh
+npm install @the-link/frame
+```
+
+## Parent
+
+```ts
+import { FrameLink } from "@the-link/frame"
+
+const link = new FrameLink(
+  iframe.contentWindow!,
+  "https://client.example",
+)
+```
+
+## Child
+
+```ts
+import { FrameLink } from "@the-link/frame"
+
+const link = new FrameLink(
+  window.parent,
+  "https://desktop.example",
+)
+```
+
+Outbound events use `Window.postMessage()` and native structured cloning.
+Inbound events are accepted only when both `message.source` and
+`message.origin` match the configured Window and origin.
+
+The origin is required. `"*"` is available for opaque origins, while
+source-Window validation remains active. Calling `disconnect()` removes the
+message listener without navigating or closing either Window.
+
+## Export
+
+```ts
+import { FrameLink } from "@the-link/frame"
+```

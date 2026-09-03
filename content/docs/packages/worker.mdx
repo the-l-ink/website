@@ -1,0 +1,47 @@
+---
+title: Worker
+description: Use the same Link behavior with browser and Node.js Workers.
+---
+
+`@the-link/worker` owns Worker communication while keeping each runtime's real
+message interface explicit.
+
+## Install
+
+```sh
+npm install @the-link/worker
+```
+
+## Browser
+
+```ts
+import { BrowserWorker } from "@the-link/worker/browser"
+
+const worker = new Worker(new URL("./worker.js", import.meta.url))
+const link = new BrowserWorker(worker)
+```
+
+`BrowserWorker` accepts a browser `Worker` or compatible `MessagePort`.
+
+## Node.js
+
+```ts
+import { Worker } from "node:worker_threads"
+import { NodeWorker } from "@the-link/worker/node"
+
+const worker = new Worker(new URL("./worker.js", import.meta.url))
+const link = new NodeWorker(worker)
+```
+
+`NodeWorker` accepts a Node.js `Worker` or compatible `MessagePort`.
+
+Both adapters send `[event, ...values]` directly through `postMessage()`. Their
+runtimes apply structured cloning. Calling `disconnect()` detaches the Link; it
+does not terminate the Worker or close a supplied port.
+
+## Entry points
+
+```ts
+import { BrowserWorker } from "@the-link/worker/browser"
+import { NodeWorker } from "@the-link/worker/node"
+```

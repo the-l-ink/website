@@ -7,12 +7,14 @@ Every package has one responsibility. Core defines the contract; adapters carry
 that same contract into a particular runtime or transport.
 
 <Cards>
-  <Card title="Core" description="Links, tunnels, properties, codecs, and decorators." href="/docs/packages/core" />
-  <Card title="Client" description="Browser HTTP publishing and WebSocket subscriptions." href="/docs/packages/client" />
-  <Card title="Server" description="Hono routes and one SocketLink per client." href="/docs/packages/server" />
+  <Card title="Core" description="Links, tunnels, properties, and decorators." href="/docs/packages/core" />
+  <Card title="HTTP" description="HTTP publishing and WebSocket connections." href="/docs/packages/http" />
+  <Card title="IPC" description="Process channels and addressable local sockets." href="/docs/packages/ipc" />
+  <Card title="Worker" description="Browser and Node.js Worker message channels." href="/docs/packages/worker" />
+  <Card title="Frame" description="Source- and origin-bound Window messaging." href="/docs/packages/frame" />
+  <Card title="Tab" description="Same-origin broadcasts through BroadcastChannel." href="/docs/packages/tab" />
+  <Card title="MessagePack" description="Optional type-preserving byte serialization." href="/docs/packages/messagepack" />
   <Card title="React" description="Lifecycle-safe tunnel and property hooks." href="/docs/packages/react" />
-  <Card title="Process" description="Node.js parent-child communication over IPC." href="/docs/packages/process" />
-  <Card title="Tab" description="Same-origin communication through BroadcastChannel." href="/docs/packages/tab" />
 </Cards>
 
 ## Selection guide
@@ -20,20 +22,30 @@ that same contract into a particular runtime or transport.
 | Need | Package |
 | --- | --- |
 | In-memory event routing | `@the-link/core` |
-| Browser request-response to a server | `@the-link/client` + `@the-link/server` |
-| Long-lived browser/server traffic | `@the-link/client` + `@the-link/server` |
+| Browser request-response to a server | `@the-link/http` |
+| Long-lived browser/server traffic | `@the-link/http` |
+| Parent/child Node.js messaging | `@the-link/ipc/process` |
+| Unix socket or Windows named-pipe messaging | `@the-link/ipc/socket-client` + `@the-link/ipc/socket-server` |
+| Browser or Node.js Worker messaging | `@the-link/worker` |
+| Parent/iframe messaging | `@the-link/frame` |
+| Same-origin tab or window broadcasts | `@the-link/tab` |
+| Type-preserving bytes | `@the-link/messagepack` |
 | Render Tunnel or Property state | `@the-link/react` |
-| Parent/child Node.js messaging | `@the-link/process` |
-| Same-origin tab or window messaging | `@the-link/tab` |
 
-All packages use named root exports. Only Core decorators are intentionally
-isolated behind subpath exports.
+Every package uses named exports. Subpaths distinguish adapters only when one
+domain has multiple concrete runtime roles.
 
 ```ts
 import { TheLink, Tunnel, Property } from "@the-link/core"
-import { ClientLink } from "@the-link/client"
-import { ServerLink } from "@the-link/server"
-import { ReactTunnel, useProperty } from "@the-link/react"
-import { ProcessLink } from "@the-link/process"
+import { HttpClient } from "@the-link/http/client"
+import { HttpServer } from "@the-link/http/server"
+import { ProcessLink } from "@the-link/ipc/process"
+import { SocketClient } from "@the-link/ipc/socket-client"
+import { SocketServer } from "@the-link/ipc/socket-server"
+import { BrowserWorker } from "@the-link/worker/browser"
+import { NodeWorker } from "@the-link/worker/node"
+import { FrameLink } from "@the-link/frame"
 import { TabLink } from "@the-link/tab"
+import { deserialize, serialize } from "@the-link/messagepack"
+import { ReactTunnel, useProperty } from "@the-link/react"
 ```

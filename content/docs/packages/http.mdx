@@ -1,0 +1,82 @@
+---
+title: HTTP
+description: Publish over HTTP and maintain bidirectional WebSocket connections.
+---
+
+`@the-link/http` carries the Core Link contract across an HTTP boundary. Its
+Client and Server entry points remain separate so Hono never enters the browser
+module graph.
+
+## Install
+
+```sh
+npm install @the-link/http
+```
+
+## Server
+
+```ts
+import { HttpServer } from "@the-link/http/server"
+
+const server = new HttpServer()
+
+server.$inbound.subscribe("sum", (left: number, right: number) => left + right)
+server.prepareConnection()
+
+export default server.app
+```
+
+`prepareConnection()` registers `POST /publish`. Pass the WebSocket upgrader
+from the chosen Hono runtime to also register `GET /subscribe`.
+
+```ts
+server.prepareConnection(upgradeWebSocket)
+
+server.onSubscribe<{ token: string }>(connection => {
+  console.log(connection.payload.token)
+  connection.autoJoin(server)
+
+  return { identity: "account-42" }
+})
+```
+
+Each accepted WebSocket has its own Link and payload. Active connections are
+available in `server.sockets`.
+
+## Client
+
+```ts
+import { HttpClient } from "@the-link/http/client"
+
+const client = new HttpClient("https://api.example.com/events")
+const total = await client.$outbound.publishFirst<number>("sum", 20, 22)
+```
+
+HTTP publications return the values produced by remote subscribers.
+`subscribeAsync()` waits for an accepted WebSocket connection:
+
+```ts
+const connection = await client.subscribeAsync<{ identity: string }>({
+  token: "session-token",
+})
+
+connection.$inbound.subscribe("notification", console.log)
+await connection.$outbound.publish("presence", "online")
+```
+
+`onSubscribe()` observes accepted connections. Call `unsubscribe()` on a
+connection to close it deliberately; recoverable Client closures reconnect
+with their original payload.
+
+## Serialization
+
+UTF-8 JSON bytes are the default. Both halves expose `setSerialize()` and
+`setDeserialize()` so the application can select another compatible byte
+policy.
+
+## Entry points
+
+```ts
+import { HttpClient } from "@the-link/http/client"
+import { HttpServer } from "@the-link/http/server"
+```

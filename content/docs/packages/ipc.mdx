@@ -1,0 +1,81 @@
+---
+title: IPC
+description: Communicate through Node.js process channels and local socket addresses.
+---
+
+`@the-link/ipc` owns local inter-process communication. Its three entry points
+distinguish an existing process channel from an addressable Socket connection.
+
+## Install
+
+```sh
+npm install @the-link/ipc
+```
+
+## Process channel
+
+Pass any `ChildProcess` created with an active IPC channel:
+
+```ts
+import { spawn } from "node:child_process"
+import { ProcessLink } from "@the-link/ipc/process"
+
+const child = spawn(process.execPath, ["worker.js"], {
+  serialization: "advanced",
+  stdio: ["inherit", "inherit", "inherit", "ipc"],
+})
+
+const link = new ProcessLink(child)
+```
+
+Inside the child, the current process is the default target:
+
+```ts
+const link = new ProcessLink()
+```
+
+The adapter sends `[event, ...values]` directly through `send()`. Serialization
+is selected when the process channel is created. `disconnect()` detaches the
+Link without disconnecting or terminating the process.
+
+## Socket server
+
+```ts
+import { SocketServer } from "@the-link/ipc/socket-server"
+
+const server = new SocketServer(address)
+
+server.onConnection(connection => {
+  connection.$inbound.subscribe("sum", (left: number, right: number) => left + right)
+})
+
+await server.listen()
+```
+
+Every accepted connection has its own private Link. POSIX systems use Unix
+domain sockets with mode `0600` by default; Windows uses named pipes.
+
+## Socket client
+
+```ts
+import { SocketClient } from "@the-link/ipc/socket-client"
+
+const client = new SocketClient(address)
+
+await client.connect()
+
+const total = await client.$outbound.publishFirst<number>("sum", 20, 22)
+
+await client.disconnect()
+```
+
+Socket publications carry remote results and failures. UTF-8 JSON bytes are
+the default; both Socket roles expose `setSerialize()` and `setDeserialize()`.
+
+## Entry points
+
+```ts
+import { ProcessLink } from "@the-link/ipc/process"
+import { SocketClient } from "@the-link/ipc/socket-client"
+import { SocketServer } from "@the-link/ipc/socket-server"
+```

@@ -1,8 +1,8 @@
 # The Link Website
 
 The website and documentation for [The Link](https://the-l.ink), a composable
-bidirectional event-routing contract with adapters for browsers, servers,
-processes, React, and same-origin tabs.
+bidirectional event-routing contract with adapters for HTTP, local processes,
+Workers, browser frames, tabs, and React.
 
 ## Development
 

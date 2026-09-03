@@ -1,0 +1,52 @@
+---
+title: MessagePack
+description: Select a type-preserving byte policy when a boundary requires bytes.
+---
+
+`@the-link/messagepack` is an optional serialization policy. It is not a Link
+adapter, and no boundary is required to use it.
+
+## Install
+
+```sh
+npm install @the-link/messagepack
+```
+
+## Encode and decode
+
+```ts
+import { deserialize, serialize } from "@the-link/messagepack"
+
+const bytes = serialize({
+  createdAt: new Date(),
+  data: new Uint8Array([1, 2, 3]),
+})
+
+const value = deserialize(bytes)
+```
+
+The transmitted value model preserves `undefined`, `bigint`, `Date`, `Map`,
+`Set`, `RegExp`, `URL`, `Error`, and binary data. Array buffers and typed-array
+views become `Uint8Array`. `Transmitted<T>` describes the resulting value type.
+
+## Configure an adapter
+
+Adapters with a selectable byte policy accept the functions directly:
+
+```ts
+client.setSerialize(serialize)
+client.setDeserialize(deserialize)
+```
+
+The two ends of a boundary must select compatible policies.
+
+## Attachments
+
+```ts
+const bytes = serialize({ file }, [file])
+const value = deserialize(bytes, [file])
+```
+
+Attachments are referenced by their ordered index instead of being encoded
+inside the MessagePack payload. The surrounding boundary remains responsible
+for carrying the same attachment list to the receiver.

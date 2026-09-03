@@ -29,6 +29,8 @@ await tabs.$outbound.publish("document:changed", {
   id: "document-42",
   title: "The Link",
 })
+
+tabs.close()
 ```
 
 The browser delivers broadcasts to other `BroadcastChannel` instances with the
@@ -36,7 +38,9 @@ same namespace and origin. The sender's own channel instance does not receive
 its broadcast.
 
 Payloads use the platform's structured-clone algorithm. This adapter does not
-apply the Core byte codec and requires no server.
+apply a byte codec and requires no server.
+
+Calling `close()` leaves the namespace and releases the underlying channel.
 
 ## Export
 

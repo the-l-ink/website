@@ -1,6 +1,6 @@
 ---
 title: Core
-description: Links, tunnels, properties, codecs, and decorator entry points.
+description: Links, tunnels, properties, and decorator entry points.
 ---
 
 `@the-link/core` contains the transport-neutral contracts shared by every
@@ -19,14 +19,13 @@ import {
   TheLink,
   Tunnel,
   Property,
-  defaultSerialize,
-  defaultDeserialize,
 } from "@the-link/core"
 ```
 
-The root also exports the public types `Initializer`, `Publisher`, `TunnelName`,
-`Interceptor`, `Subscriber`, `Forwarder`, `Finalizer`, `PropertyInterceptor`,
-`PropertyType`, `Bytes`, `Serialize`, and `Deserialize`.
+The root also exports `serializeJSON()` and `deserializeJSON()`, plus the public
+types `Initializer`, `Publisher`, `TunnelName`, `Interceptor`, `Subscriber`,
+`Forwarder`, `Finalizer`, `PropertyInterceptor`, `PropertyType`, `Bytes`,
+`Serialize`, and `Deserialize`.
 
 ## Tunnel API
 
@@ -84,17 +83,18 @@ Each property exposes:
 
 Read [Properties](../concepts/properties.mdx) for the provider/consumer lifecycle.
 
-## Codecs
-
-The default codec serializes JSON as UTF-8 bytes:
+## JSON bytes
 
 ```ts
-type Serialize = (value: unknown) => Uint8Array<ArrayBuffer>
-type Deserialize = (bytes: Uint8Array<ArrayBuffer>) => unknown
+import { deserializeJSON, serializeJSON } from "@the-link/core"
+
+const bytes = serializeJSON({ ready: true })
+const value = deserializeJSON(bytes)
 ```
 
-Client and Server allow both functions to be replaced. Paired transports must
-use compatible serializers and deserializers.
+These are optional utilities equivalent to JSON stringification and parsing
+over UTF-8 bytes. They are not part of Link routing, and adapters are free to
+use another policy or no explicit codec at all.
 
 ## Decorator entry points
 

@@ -3,16 +3,17 @@ title: Getting started
 description: Install The Link and route your first event.
 ---
 
-The smallest useful setup needs only `@the-link/core`. Add an adapter when the
-route must cross a browser, server, process, React, or tab boundary.
+The smallest useful setup needs only `@the-link/core`. Add an adapter when a
+route must cross a concrete boundary.
 
 ## Requirements
 
 - A modern JavaScript runtime with ECMAScript modules
 - TypeScript when you want the published declarations and decorator metadata
 - React 19.2 or later only when using `@the-link/react`
-- A browser with `fetch`, `WebSocket`, `Blob`, and URL APIs for `@the-link/client`
-- Node.js process IPC for `@the-link/process`
+- A browser and Hono-compatible runtime for the HTTP adapter
+- Node.js for the IPC Process and Socket adapters
+- A compatible browser or Node.js runtime for Worker adapters
 
 ## Install Core
 
@@ -93,19 +94,19 @@ await application.$outbound.publish("account:profile")
 
 ## Cross a boundary
 
-Install the adapter that owns the transport. For example, a browser publishes to
-a Hono server with the Client and Server packages:
+Install the adapter that owns the boundary. For example, a browser publishes to
+a Hono server through the HTTP package:
 
 ```sh
-npm install @the-link/client @the-link/server
+npm install @the-link/http
 ```
 
 The server exposes the route:
 
 ```ts
-import { ServerLink } from "@the-link/server"
+import { HttpServer } from "@the-link/http/server"
 
-const server = new ServerLink()
+const server = new HttpServer()
 
 server.$inbound.subscribe("sum", (left: number, right: number) => left + right)
 server.prepareConnection()
@@ -116,11 +117,11 @@ export default server.app
 The browser addresses the same route:
 
 ```ts
-import { ClientLink } from "@the-link/client"
+import { HttpClient } from "@the-link/http/client"
 
-const client = new ClientLink("https://api.example.com/events")
+const client = new HttpClient("https://api.example.com/events")
 const [total] = await client.$outbound.publish<[number]>("sum", 20, 22)
 ```
 
-Read [Client and Server](./packages/client.mdx) for WebSocket subscriptions and
-runtime integration details.
+Read [HTTP](./packages/http.mdx) for WebSocket subscriptions and runtime
+integration details.

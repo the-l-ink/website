@@ -4,10 +4,12 @@
   "pages": [
     "index",
     "core",
-    "client",
-    "server",
-    "react",
-    "process",
-    "tab"
+    "http",
+    "ipc",
+    "worker",
+    "frame",
+    "tab",
+    "messagepack",
+    "react"
   ]
 }
